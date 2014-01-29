@@ -33,16 +33,17 @@ public class RegexPanel extends JPanel {
   private Highlighter.HighlightPainter regexPainter = new DefaultHighlightPainter(Color.YELLOW);
   
   private RegexTextArea regexArea = null;
-  private JTextArea inputArea = null;  
+  private JTextArea inputArea = null; 
+  private JTextArea groupsArea = null;
   private JTextArea replaceWithField = null;
   private JTextArea replacementArea = null;
-  private JTextArea groupsArea = null;
+  
   
   
   public RegexPanel() {
     super();
     setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-    add(makeScrollingTextComponent("Regular Expressions: ", getRegexArea()));
+    add(makeScrollingTextComponent("Regular Expression: ", getRegexArea()));
     add(makeScrollingTextComponent("Matching Test String: ", getInputArea()));
     add(makeScrollingTextComponent("Groups: ", getGroupsArea()));
     add(makeScrollingTextComponent("Replace with: ", getReplaceWithField()));
@@ -102,6 +103,7 @@ public class RegexPanel extends JPanel {
   
   
   
+  
   /** Gets the text field for the replacement text to use in the replace area. */
   public JTextComponent getReplaceWithField() {
     if(replaceWithField == null) {
@@ -120,12 +122,16 @@ public class RegexPanel extends JPanel {
       replacementArea.setLineWrap(true);
       replacementArea.setFont(textAreaFont);
       replacementArea.setEditable(false);
+      replacementArea.setBackground(Color.LIGHT_GRAY);
       
       // Updates to the input area change both the matching area's text and highlighting.
       DocumentListener docListener = new DocumentChangeAdapter() {
         public void anyUpdate(DocumentEvent e) {
           replacementArea.setText(getInputArea().getText());
-          applyReplacementHighlighting(replacementArea, getRegexArea().getPattern(), getReplaceWithField().getText());
+          String replaceWithText = getReplaceWithField().getText();
+          if(!"".equals(replaceWithText)) {
+            applyReplacementHighlighting(replacementArea, getRegexArea().getPattern(), replaceWithText);
+          }
         }
       };
       getInputArea().getDocument().addDocumentListener(docListener);
@@ -136,7 +142,10 @@ public class RegexPanel extends JPanel {
         
         public void regexUpdate(RegexEvent e) {
           replacementArea.setText(getInputArea().getText());
-          applyReplacementHighlighting(replacementArea, e.getPattern(), getReplaceWithField().getText());
+          String replaceWithText = getReplaceWithField().getText();
+          if(!"".equals(replaceWithText)) {
+            applyReplacementHighlighting(replacementArea, getRegexArea().getPattern(), replaceWithText);
+          }
         }
         
       };
@@ -154,6 +163,7 @@ public class RegexPanel extends JPanel {
       groupsArea.setLineWrap(true);
       groupsArea.setFont(textAreaFont);
       groupsArea.setEditable(false);
+      groupsArea.setBackground(Color.LIGHT_GRAY);
       
       // Updates to the input area change both the matching area's text and highlighting.
       DocumentListener docListener = new DocumentChangeAdapter() {
@@ -234,7 +244,12 @@ public class RegexPanel extends JPanel {
     Matcher matcher = pattern.matcher(testStr);
     if(matcher.find()) {
       for(int i=0; i <= matcher.groupCount(); i++) {
-        String groupString = testStr.substring(matcher.start(i), matcher.end(i));
+        int startIndex = matcher.start(i);
+        int endIndex = matcher.end(i);
+        String groupString = "undefined";
+        if(startIndex != -1) {
+          groupString = testStr.substring(startIndex, endIndex);
+        }
         result += "Group " + i + ": (" + groupString + ")\n";
       }
     }

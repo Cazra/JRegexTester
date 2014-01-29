@@ -8,6 +8,8 @@ import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.apache.commons.lang3.StringEscapeUtils;
+
 public class RegexTextArea extends JTextArea {
   
   /** The regex Pattern compiled with the text in this component. */
@@ -26,9 +28,13 @@ public class RegexTextArea extends JTextArea {
     getDocument().addDocumentListener(new DocumentChangeAdapter() {
       public void anyUpdate(DocumentEvent e) {
         try {
-          pattern = Pattern.compile(getText());
+          String regexString = StringEscapeUtils.unescapeJava(getText());
+          pattern = Pattern.compile(regexString);
         }
         catch(PatternSyntaxException ex) {
+          pattern = Pattern.compile("");
+        }
+        catch(NullPointerException ex) {
           pattern = Pattern.compile("");
         }
         _fireRegexUpdateEvent(new RegexEvent(this, pattern));
